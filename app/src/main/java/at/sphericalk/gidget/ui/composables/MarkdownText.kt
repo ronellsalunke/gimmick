@@ -21,12 +21,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.res.ResourcesCompat
-import coil.ImageLoader
 import io.noties.markwon.Markwon
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.html.HtmlPlugin
-import io.noties.markwon.image.coil.CoilImagesPlugin
+import io.noties.markwon.image.ImagesPlugin
+import io.noties.markwon.image.network.OkHttpNetworkSchemeHandler
 import io.noties.markwon.linkify.LinkifyPlugin
 
 @Composable
@@ -82,19 +82,13 @@ fun MarkdownText(
     markdownRender.setMarkdown(markdownText, markdown)
 }
 
-private const val IMAGE_MEMORY_PERCENTAGE = 0.5
 
 private fun createMarkdownRender(context: Context): Markwon {
-    val imageLoader = ImageLoader.Builder(context)
-        .apply {
-            availableMemoryPercentage(IMAGE_MEMORY_PERCENTAGE)
-            bitmapPoolPercentage(IMAGE_MEMORY_PERCENTAGE)
-            crossfade(true)
-        }.build()
-
     return Markwon.builder(context)
         .usePlugin(HtmlPlugin.create())
-        .usePlugin(CoilImagesPlugin.create(context, imageLoader))
+        .usePlugin(ImagesPlugin.create { plugin ->
+            plugin.addSchemeHandler(OkHttpNetworkSchemeHandler.create())
+        })
         .usePlugin(StrikethroughPlugin.create())
         .usePlugin(TablePlugin.create(context))
         .usePlugin(LinkifyPlugin.create())

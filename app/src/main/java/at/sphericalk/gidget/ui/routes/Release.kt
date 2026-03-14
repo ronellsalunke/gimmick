@@ -2,10 +2,27 @@ package at.sphericalk.gidget.ui.routes
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,9 +38,8 @@ import at.sphericalk.gidget.R
 import at.sphericalk.gidget.ui.composables.MarkdownText
 import at.sphericalk.gidget.utils.timeAgo
 import at.sphericalk.gidget.utils.toColor
-import coil.transform.CircleCropTransformation
-import com.google.accompanist.coil.rememberCoilPainter
-import com.google.accompanist.insets.statusBarsPadding
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 
 @Composable
 fun Release(navController: NavController, viewModel: FeedViewModel) {
@@ -33,7 +49,7 @@ fun Release(navController: NavController, viewModel: FeedViewModel) {
                 elevation = 0.dp,
                 modifier = Modifier
                     .background(MaterialTheme.colors.background)
-                    .statusBarsPadding(),
+                    .windowInsetsPadding(WindowInsets.statusBars),
                 backgroundColor = MaterialTheme.colors.background,
                 title = {
                     Box(
@@ -49,7 +65,7 @@ fun Release(navController: NavController, viewModel: FeedViewModel) {
                         navController.popBackStack()
                     }) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colors.onSurface
                         )
@@ -108,13 +124,14 @@ fun Release(navController: NavController, viewModel: FeedViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = rememberCoilPainter(
-                            request = event.actor.avatar_url,
-                            requestBuilder = {
-                                transformations(CircleCropTransformation())
-                            },
-                            previewPlaceholder = R.drawable.github_icon,
-                            fadeIn = true
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                .data(data = event.actor.avatar_url)
+                                .crossfade(true)
+                                .apply(block = fun ImageRequest.Builder.() {
+                                    transformations(coil.transform.CircleCropTransformation())
+                                })
+                                .build()
                         ),
                         contentDescription = event.actor.login,
                         modifier = Modifier.size(32.dp, 32.dp),

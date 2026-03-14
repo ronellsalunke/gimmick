@@ -6,12 +6,34 @@ import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import at.sphericalk.gidget.LocalActivity
-import at.sphericalk.gidget.R
 import at.sphericalk.gidget.dataStore
 import at.sphericalk.gidget.model.Event
 import at.sphericalk.gidget.model.EventType
@@ -36,13 +57,8 @@ import at.sphericalk.gidget.utils.Constants
 import at.sphericalk.gidget.utils.LanguageColors
 import at.sphericalk.gidget.utils.timeAgo
 import at.sphericalk.gidget.utils.toColor
-import coil.transform.CircleCropTransformation
-import com.google.accompanist.coil.rememberCoilPainter
-import com.google.accompanist.insets.LocalWindowInsets
-import com.google.accompanist.insets.rememberInsetsPaddingValues
-import com.google.accompanist.insets.statusBarsPadding
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -76,21 +92,22 @@ fun Feed(navController: NavController, viewModel: FeedViewModel, languageColors:
                 }
             },
         )
-    }) {
+    }) { innerPadding ->
         if (viewModel.events.isEmpty()) {
             Loading()
         } else {
             val isRefreshing by viewModel.isRefreshing.collectAsState()
             val context = LocalContext.current
-            SwipeRefresh(
-                state = rememberSwipeRefreshState(isRefreshing),
-                onRefresh = { viewModel.refresh() }) {
+            val pullRefreshState =
+                rememberPullRefreshState(isRefreshing, onRefresh = { viewModel.refresh() })
+            Box(Modifier.pullRefresh(pullRefreshState)) {
                 LazyColumn(
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    contentPadding = rememberInsetsPaddingValues(
-                        insets = LocalWindowInsets.current.systemBars,
-                        applyTop = false,
-                    )
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .padding(innerPadding),
+                    contentPadding = WindowInsets.systemBars
+                        .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+                        .asPaddingValues()
                 ) {
                     items(viewModel.events) { event ->
                         Row(
@@ -101,13 +118,14 @@ fun Feed(navController: NavController, viewModel: FeedViewModel, languageColors:
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
-                                painter = rememberCoilPainter(
-                                    request = event.actor.avatar_url,
-                                    requestBuilder = {
-                                        transformations(CircleCropTransformation())
-                                    },
-                                    previewPlaceholder = R.drawable.github_icon,
-                                    fadeIn = true
+                                painter = rememberAsyncImagePainter(
+                                    ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                        .data(data = event.actor.avatar_url)
+                                        .crossfade(true)
+                                        .apply(block = fun ImageRequest.Builder.() {
+                                            transformations(coil.transform.CircleCropTransformation())
+                                        })
+                                        .build()
                                 ),
                                 contentDescription = event.actor.login,
                                 modifier = Modifier.size(32.dp, 32.dp),
@@ -167,7 +185,8 @@ fun Feed(navController: NavController, viewModel: FeedViewModel, languageColors:
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Column(
                                     modifier = Modifier
-                                        .padding(24.dp).fillParentMaxWidth(0.75f)
+                                        .padding(24.dp)
+                                        .fillParentMaxWidth(0.75f)
                                 ) {
                                     val showTitle = event.type != EventType.IssueCommentEvent
                                     if (showTitle) {
@@ -197,9 +216,7 @@ fun Feed(navController: NavController, viewModel: FeedViewModel, languageColors:
                                         )
                                     }
                                 }
-                                Column(Modifier.fillMaxHeight().fillParentMaxWidth().padding(end = 24.dp), verticalArrangement = Arrangement.Center) {
-                                    Icon(Icons.Rounded.OpenInNew, "")
-                                }
+                                Icon(Icons.AutoMirrored.Rounded.OpenInNew, "")
                             }
                         }
                         Row(
@@ -227,6 +244,11 @@ fun Feed(navController: NavController, viewModel: FeedViewModel, languageColors:
                         }
                     }
                 }
+                PullRefreshIndicator(
+                    isRefreshing,
+                    pullRefreshState,
+                    Modifier.align(Alignment.TopCenter)
+                )
             }
         }
     }

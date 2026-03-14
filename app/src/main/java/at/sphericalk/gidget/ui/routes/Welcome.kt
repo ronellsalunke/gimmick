@@ -2,7 +2,6 @@ package at.sphericalk.gidget.ui.routes
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -10,9 +9,25 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,12 +36,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import at.sphericalk.gidget.*
+import at.sphericalk.gidget.AuthActivity
+import at.sphericalk.gidget.BuildConfig
+import at.sphericalk.gidget.LocalActivity
 import at.sphericalk.gidget.R
+import at.sphericalk.gidget.dataStore
 import at.sphericalk.gidget.model.ApiResult
 import at.sphericalk.gidget.ui.composables.Loading
 import at.sphericalk.gidget.utils.Constants
-import com.google.accompanist.insets.statusBarsPadding
 
 enum class WelcomeScreenState {
     Success,
@@ -67,11 +84,13 @@ fun Welcome(viewModel: FeedViewModel, navigateToFeed: () -> Unit) {
 
     Scaffold(
         topBar = { GimmickTopBar(stringResource(id = R.string.app_name)) },
-        content = {
-            GimmickWelcomeScreen(
-                welcomeScreenState = screenState,
-                activityResultLauncher = oauthLauncher,
-            )
+        content = { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                GimmickWelcomeScreen(
+                    welcomeScreenState = screenState,
+                    activityResultLauncher = oauthLauncher,
+                )
+            }
         }
     )
 }

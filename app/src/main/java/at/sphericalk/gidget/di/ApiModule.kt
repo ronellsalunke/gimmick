@@ -2,6 +2,7 @@ package at.sphericalk.gidget.di
 
 import at.sphericalk.gidget.data.network.GithubService
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,10 +22,10 @@ private const val BASE_URL = "https://api.github.com"
 object ApiModule {
     @Provides
     @Singleton
-    fun providesRetrofitService(client: OkHttpClient): Retrofit = Retrofit.Builder()
+    fun providesRetrofitService(client: OkHttpClient, moshi: Moshi): Retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
 //        .client(client)
-        .addConverterFactory(MoshiConverterFactory.create())
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
 
@@ -45,5 +46,7 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun providesMoshiInstance() = Moshi.Builder().build()
+    fun providesMoshiInstance(): Moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
 }

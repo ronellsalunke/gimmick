@@ -5,12 +5,16 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,8 +29,6 @@ import at.sphericalk.gidget.ui.routes.Welcome
 import at.sphericalk.gidget.ui.theme.GidgetTheme
 import at.sphericalk.gidget.utils.Constants
 import at.sphericalk.gidget.utils.LanguageColors
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -45,33 +47,25 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
-            ProvideWindowInsets {
-                GidgetTheme {
-                    val systemUiController = rememberSystemUiController()
-                    val useDarkIcons = MaterialTheme.colors.isLight
-                    val bgColor = MaterialTheme.colors.background
-
-                    SideEffect {
-                        systemUiController.setStatusBarColor(
-                            color = Color.Transparent,
-                            darkIcons = useDarkIcons
-                        )
-                        systemUiController.setNavigationBarColor(
-                            color = bgColor,
-                            darkIcons = useDarkIcons
-                        )
+            GidgetTheme {
+                val view = LocalView.current
+                val isLightTheme = MaterialTheme.colors.isLight
+                SideEffect {
+                    val window = (view.context as Activity).window
+                    WindowCompat.getInsetsController(window, view).apply {
+                        isAppearanceLightStatusBars = isLightTheme
+                        isAppearanceLightNavigationBars = isLightTheme
                     }
+                }
 
-                    CompositionLocalProvider(LocalActivity provides this) {
-                        navController = rememberNavController()
-                        Home(viewModel, navController, languageColors)
-                    }
+                CompositionLocalProvider(LocalActivity provides this) {
+                    navController = rememberNavController()
+                    Home(viewModel, navController, languageColors)
                 }
             }
         }
-        // This must be called after setContent
-        WindowCompat.setDecorFitsSystemWindows(window, false)
     }
 
     @Composable
