@@ -153,6 +153,7 @@ fun Feed(navController: NavController, viewModel: FeedViewModel, languageColors:
                                             }
                                             append("in ")
                                         }
+                                        else -> {}
                                     }
                                     append(" ")
                                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
