@@ -1,11 +1,14 @@
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
+//    alias(libs.plugins.kotlin.android)
+//    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.legacy.kapt)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 val secretPropertiesFile = rootProject.file("secrets.properties")
@@ -20,7 +23,7 @@ android {
 
     defaultConfig {
         applicationId = "at.sphericalk.gidget"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 36
         versionCode = 2
         versionName = "1.1"
@@ -50,9 +53,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -65,13 +66,19 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0
+    }
+}
+
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    
+
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -90,11 +97,8 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // Accompanist
-    implementation(libs.accompanist.coil)
-    implementation(libs.accompanist.insets)
-    implementation(libs.accompanist.swiperefresh)
-    implementation(libs.accompanist.systemuicontroller)
+    // Coil
+    implementation(libs.coil.compose)
 
     // Datastore
     implementation(libs.androidx.datastore.preferences)
@@ -104,6 +108,7 @@ dependencies {
     kapt(libs.hilt.android.compiler)
 
     // Networking
+    implementation(libs.moshi.kotlin)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.okhttp.logging.interceptor)
@@ -116,13 +121,13 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
 
     // Markwon
     implementation(libs.markwon.core)
     implementation(libs.markwon.ext.strikethrough)
     implementation(libs.markwon.ext.tables)
     implementation(libs.markwon.html)
-    implementation(libs.markwon.image.coil)
+    implementation(libs.markwon.image)
     implementation(libs.markwon.linkify)
 }
